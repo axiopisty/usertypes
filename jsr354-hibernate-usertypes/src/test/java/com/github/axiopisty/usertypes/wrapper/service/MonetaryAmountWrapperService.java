@@ -9,6 +9,7 @@ import javax.money.MonetaryAmount;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -53,7 +54,7 @@ public class MonetaryAmountWrapperService {
 
   public List<MonetaryAmountWrapper> getMonetaryAmountsGreaterThan(MonetaryAmount ma) {
     Query q = em.createNamedQuery(MonetaryAmountWrapper.QUERIES.FIND_BY_MONETARY_AMOUNT_GT);
-    q.setParameter("monetaryAmount", ma);
+    q.setParameter("monetaryAmount", ma.getNumber().numberValue(BigDecimal.class));
     @SuppressWarnings("unchecked")
     List<MonetaryAmountWrapper> results = (List<MonetaryAmountWrapper>) q.getResultList();
     return results;

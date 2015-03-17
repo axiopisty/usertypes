@@ -2,6 +2,9 @@ package com.github.axiopisty.usertypes.hibernate.jsr354;
 
 import com.github.axiopisty.usertypes.wrapper.entities.MonetaryAmountWrapper;
 import com.github.axiopisty.usertypes.wrapper.service.MonetaryAmountWrapperService;
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.StringType;
+import org.hibernate.type.Type;
 import org.javamoney.moneta.Money;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,11 +15,11 @@ import javax.inject.Inject;
 import javax.money.CurrencyUnit;
 import javax.money.MonetaryAmount;
 import javax.money.MonetaryCurrencies;
+import javax.money.NumberValue;
 import javax.money.format.MonetaryAmountFormat;
 import javax.money.format.MonetaryFormats;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -28,10 +31,10 @@ import static org.junit.Assert.*;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "/spring/applicationContext-test.xml" })
-public class MonetaryAmountUserTypeTest {
+public class MonetaryAmountTypeTest {
 
 
-  private final static MonetaryAmountUserType MAUT = new MonetaryAmountUserType();
+  private final static MonetaryAmountType MAT = new MonetaryAmountType();
 
   private final static CurrencyUnit USD = MonetaryCurrencies.getCurrency("USD");
   private final static CurrencyUnit CNY = MonetaryCurrencies.getCurrency("CNY");
@@ -46,54 +49,81 @@ public class MonetaryAmountUserTypeTest {
   private MonetaryAmountWrapperService service;
 
   @Test
-  public void testSqlTypes() {
-    int[] expected = {Types.NUMERIC, Types.VARCHAR};
-    int[] actual = MAUT.sqlTypes();
+  public void testPropertyTypes() {
+    Type[] expected = { BigDecimalType.INSTANCE, StringType.INSTANCE };
+    Type[] actual = MAT.getPropertyTypes();
     assertArrayEquals(expected, actual);
+  }
+
+  @Test
+  public void testPropertyNames() {
+    String[] expected = { "number", "currency" };
+    String[] actual = MAT.getPropertyNames();
+    assertArrayEquals(expected, actual);
+  }
+
+  @Test
+  public void testExtractNumberProperty() {
+    BigDecimal expected = ONE_CNY.getNumber().numberValue(BigDecimal.class);
+    BigDecimal actual = ((NumberValue)MAT.getPropertyValue(ONE_CNY, 0)).numberValue(BigDecimal.class);
+    assertEquals("Should return a NumberValue that produces a BigDecimal", expected, actual);
+  }
+
+  @Test
+  public void testExtractCurrencyProperty() {
+    String expected = ONE_CNY.getCurrency().getCurrencyCode();
+    String actual = ((CurrencyUnit)MAT.getPropertyValue(ONE_CNY, 1)).getCurrencyCode();
+    assertEquals("Should return the appropriate currency code", expected, actual);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testExtractIllegalProperty() {
+    MAT.getPropertyValue(ONE_CNY, 2);
   }
 
   @Test
   public void testReturnedClass() {
     Class expected = MonetaryAmount.class;
-    Class actual = MAUT.returnedClass();
+    Class actual = MAT.returnedClass();
     assertEquals(expected, actual);
   }
 
   @Test
   public void testEquals() {
-    boolean actual = MAUT.equals(ONE_USD, ONE_CNY);
-    assertFalse(String.format("%s == %s ? %s", USDF.format(ONE_USD), USDF.format(ONE_CNY), actual), actual);
+    boolean actual = MAT.equals(ONE_USD, ONE_CNY);
+    String format = String.format("%s == %s", USDF.format(ONE_USD), USDF.format(ONE_CNY)) + " ? %s";
+    assertEquals(String.format(format, actual), false, actual);
 
     MonetaryAmount one = Money.parse("USD 1");
-    actual = MAUT.equals(ONE_USD, one);
-    assertTrue(String.format("%s == %s ? %s", USDF.format(ONE_USD), USDF.format(one), actual), actual);
+    actual = MAT.equals(ONE_USD, one);
+    assertEquals(String.format(format, actual), true, actual);
   }
 
   @Test
   public void testHashCode() {
     int expected = ONE_USD.hashCode();
-    int actual = MAUT.hashCode(ONE_USD);
+    int actual = MAT.hashCode(ONE_USD);
     assertEquals(expected, actual);
   }
 
   @Test
   public void testIsMutable() {
-    assertFalse(MAUT.isMutable());
+    assertFalse(MAT.isMutable());
   }
 
   @Test
   public void testDisassemble() {
-    MAUT.disassemble(ONE_USD);
+    MAT.disassemble(ONE_USD, null);
   }
 
   @Test
   public void testAssemble() {
-    assertEquals(ONE_CNY, MAUT.assemble((Serializable) ONE_CNY, null));
+    assertEquals(ONE_CNY, MAT.assemble((Serializable) ONE_CNY, null, null));
   }
 
   @Test
   public void testReplace() {
-    assertEquals(ONE_CNY, MAUT.replace(ONE_CNY, null, null));
+    assertEquals(ONE_CNY, MAT.replace(ONE_CNY, null, null, null));
   }
 
   @Test
@@ -152,7 +182,7 @@ public class MonetaryAmountUserTypeTest {
     MonetaryAmount threshold = wrappers.get(ITEM_INDEX).getMonetaryAmount();
     service.cleanCache();
     List<MonetaryAmountWrapper> actual = service.getMonetaryAmountsGreaterThan(threshold);
-    int expected = NUMBER_OF_ITEMS - ITEM_INDEX;
+    int expected = NUMBER_OF_ITEMS - ITEM_INDEX - 1;
     assertEquals("MonetaryAmounts should be comparable", expected, actual.size());
   }
 

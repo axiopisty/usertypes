@@ -22,7 +22,7 @@ import javax.persistence.*;
   ),
   @NamedQuery(
     name = MonetaryAmountWrapper.QUERIES.FIND_BY_MONETARY_AMOUNT_GT,
-    query = "select maw from MonetaryAmountWrapper maw where maw.monetaryAmount > :monetaryAmount"
+    query = "select maw from MonetaryAmountWrapper maw where maw.monetaryAmount.number > :monetaryAmount"
   )
 })
 public class MonetaryAmountWrapper {
@@ -37,7 +37,7 @@ public class MonetaryAmountWrapper {
   @GeneratedValue
   private Long id;
 
-  @Type(type = "com.github.axiopisty.usertypes.hibernate.jsr354.MonetaryAmountUserType")
+  @Type(type = "com.github.axiopisty.usertypes.hibernate.jsr354.MonetaryAmountType")
   @Columns(columns = {
     @Column(name = "monetary_amount"),
     @Column(name = "currency_code")

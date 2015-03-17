@@ -1,8 +1,11 @@
 package com.github.axiopisty.usertypes.hibernate.jsr354;
 
-import com.github.axiopisty.usertypes.hibernate.ImmutableUserType;
+import com.github.axiopisty.usertypes.hibernate.ImmutableType;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.StringType;
+import org.hibernate.type.Type;
 import org.hibernate.usertype.UserType;
 import org.javamoney.moneta.Money;
 
@@ -12,7 +15,6 @@ import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 
 /**
  * <p>
@@ -24,24 +26,39 @@ import java.sql.Types;
  *
  * @see UserType
  */
-public class MonetaryAmountUserType extends ImmutableUserType {
+public class MonetaryAmountType extends ImmutableType<MonetaryAmount> {
 
-  private final static int[] SQL_TYPES = {Types.NUMERIC, Types.VARCHAR};
+  private final static Type[] PROPERTY_TYPES = { BigDecimalType.INSTANCE, StringType.INSTANCE };
+  private final static String[] PROPERTY_NAMES = {"number", "currency"};
 
-  @Override
-  public int[] sqlTypes() {
-    return SQL_TYPES;
+  public MonetaryAmountType() {
+    super(MonetaryAmount.class);
   }
 
   @Override
-  public Class returnedClass() {
-    return MonetaryAmount.class;
+  public Type[] getPropertyTypes() {
+    return PROPERTY_TYPES;
+  }
+
+  @Override
+  public String[] getPropertyNames() {
+    return PROPERTY_NAMES;
+  }
+
+  @Override
+  public Object getPropertyValue(Object component, int property) throws HibernateException {
+    MonetaryAmount amount = (MonetaryAmount) component;
+    switch(property) {
+      case 0: return amount.getNumber();
+      case 1: return amount.getCurrency();
+      default: throw new IllegalArgumentException(property + " is not a valid property index");
+    }
   }
 
   @Override
   public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor sessionImplementor, Object owner) throws HibernateException, SQLException {
-    if(names.length != SQL_TYPES.length) {
-      throw new HibernateException("Expected " + SQL_TYPES.length + " column names but got " + names.length);
+    if(names.length != PROPERTY_NAMES.length) {
+      throw new HibernateException("Expected " + PROPERTY_NAMES.length + " column names but got " + names.length);
     }
     final BigDecimal number = rs.getBigDecimal(names[0]);
     final String currencyCode = rs.getString(names[1]);
