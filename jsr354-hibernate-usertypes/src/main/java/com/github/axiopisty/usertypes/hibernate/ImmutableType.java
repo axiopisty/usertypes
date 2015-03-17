@@ -18,47 +18,47 @@ public abstract class ImmutableType<T> implements CompositeUserType {
   }
 
   @Override
-  public Class returnedClass() {
+  public final Class returnedClass() {
     return typeClass;
   }
 
   @Override
-  public boolean equals(Object x, Object y) throws HibernateException {
+  public final boolean equals(Object x, Object y) throws HibernateException {
     return x == y || (x != null && y != null && x.equals(y));
   }
 
   @Override
-  public int hashCode(Object o) throws HibernateException {
+  public final int hashCode(Object o) throws HibernateException {
     return o == null ? 0 : o.hashCode();
   }
 
   @Override
-  public Object deepCopy(Object value) throws HibernateException {
+  public final Object deepCopy(Object value) throws HibernateException {
     return value;
   }
 
   @Override
-  public boolean isMutable() {
+  public final boolean isMutable() {
     return false;
   }
 
   @Override
-  public void setPropertyValue(Object component, int property, Object value) throws HibernateException {
+  public final void setPropertyValue(Object component, int property, Object value) throws HibernateException {
     throw new UnsupportedOperationException(String.format("%s is immutable", typeClass.getCanonicalName()));
   }
 
   @Override
-  public Serializable disassemble(Object value, SessionImplementor session) throws HibernateException {
+  public final Serializable disassemble(Object value, SessionImplementor session) throws HibernateException {
     return (Serializable)value;
   }
 
   @Override
-  public Object assemble(Serializable cached, SessionImplementor session, Object owner) throws HibernateException {
+  public final Object assemble(Serializable cached, SessionImplementor session, Object owner) throws HibernateException {
     return cached;
   }
 
   @Override
-  public Object replace(Object original, Object target, SessionImplementor session, Object owner) throws HibernateException {
+  public final Object replace(Object original, Object target, SessionImplementor session, Object owner) throws HibernateException {
     return original;
   }
 

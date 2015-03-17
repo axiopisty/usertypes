@@ -6,6 +6,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
+import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 import org.javamoney.moneta.Money;
 
@@ -18,7 +19,7 @@ import java.sql.SQLException;
 
 /**
  * <p>
- *   A hibernate {@link UserType} for {@code javax.money.MonetaryAmount} defined in
+ *   A hibernate {@link CompositeUserType} for {@code javax.money.MonetaryAmount} defined in
  *   <a href="https://jcp.org/en/jsr/detail?id=354">JSR-354</a>.
  * </p>
  *
@@ -26,7 +27,7 @@ import java.sql.SQLException;
  *
  * @see UserType
  */
-public class MonetaryAmountType extends ImmutableType<MonetaryAmount> {
+public class MonetaryAmountType extends ImmutableType<MonetaryAmount> implements CompositeUserType {
 
   private final static Type[] PROPERTY_TYPES = { BigDecimalType.INSTANCE, StringType.INSTANCE };
   private final static String[] PROPERTY_NAMES = {"number", "currency"};
